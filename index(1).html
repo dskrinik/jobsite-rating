@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JobSiteRating MVP</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f9f9f9; }
+    .header { display: flex; align-items: center; gap: 1rem; }
+    .logo { width: 48px; height: 48px; }
+    .title { font-size: 1.5rem; color: #444; }
+    .section { margin-top: 2rem; padding: 1rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .button { background: #facc15; border: none; padding: 0.5rem 1rem; cursor: pointer; font-weight: bold; border-radius: 5px; }
+    label, input, textarea { display: block; width: 100%; margin: 0.5rem 0; }
+    .tile { background: #fefce8; padding: 1rem; border-radius: 6px; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="logo-pin-stars.png" class="logo" />
+    <div class="title">JobSiteRating</div>
+  </div>
+
+  <div class="section">
+    <label for="address">Enter address to see its rating:</label>
+    <input type="text" id="address" placeholder="123 Main St" />
+    <button class="button" onclick="checkAddress()">Check Address</button>
+
+    <form id="ratingForm" style="display:none; margin-top:1rem;">
+      <label for="rating">Rate this job site (1–5):</label>
+      <input type="number" id="rating" min="1" max="5" required />
+      <label for="notes">Notes (optional):</label>
+      <textarea id="notes" rows="3"></textarea>
+      <button class="button" type="submit">Submit Rating</button>
+    </form>
+
+    <div id="thankYou" class="tile" style="display:none;"></div>
+  </div>
+
+<script>
+function checkAddress() {
+  const form = document.getElementById("ratingForm");
+  form.style.display = "block";
+  document.getElementById("thankYou").style.display = "none";
+}
+
+const form = document.getElementById("ratingForm");
+form.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const address = document.getElementById("address").value;
+  const rating = parseInt(document.getElementById("rating").value, 10);
+  const notes = document.getElementById("notes").value;
+  await submitRatingToFirestore(address, rating, notes);
+  document.getElementById("thankYou").innerText = "Thanks for rating!";
+  document.getElementById("thankYou").style.display = "block";
+  form.reset();
+});
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDzLs0I1mOdVl3AsxSESY9dsFlRSWOPZ6k",
+    authDomain: "jobsiterating.firebaseapp.com",
+    projectId: "jobsiterating",
+    storageBucket: "jobsiterating.firebasestorage.app",
+    messagingSenderId: "897899028532",
+    appId: "1:897899028532:web:993188fb900895b8cdea61"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.submitRatingToFirestore = async function(address, rating, notes) {
+    try {
+      await addDoc(collection(db, "ratings"), {
+        address: address,
+        rating: rating,
+        notes: notes,
+        timestamp: serverTimestamp()
+      });
+      console.log("Rating submitted to Firestore!");
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  };
+</script>
+
+<!-- Google Maps Places API (Autocomplete) -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1-3FrN3ye1rmqMvuwmVosD54Xt4GbFOk&libraries=places&callback=initAutocomplete" async defer></script>
+<script>
+  function initAutocomplete() {
+    const input = document.getElementById("address");
+    if (input) {
+      new google.maps.places.Autocomplete(input, {
+        types: ["geocode"],
+        componentRestrictions: { country: "us" }
+      });
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobSiteRating - Firebase Version</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDzLs0I1mOdVl3AsxSESY9dsFlRSWOPZ6k",
+      authDomain: "jobsiterating.firebaseapp.com",
+      projectId: "jobsiterating",
+      storageBucket: "jobsiterating.appspot.com",
+      messagingSenderId: "897899028532",
+      appId: "1:897899028532:web:993188fb900895b8cdea61"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('loginForm');
+      const ratingForm = document.getElementById('ratingForm');
+      const addressInput = document.getElementById('addressInput');
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          document.getElementById('loginSection').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+        } catch (err) {
+          alert('Login failed: ' + err.message);
+        }
+      });
+
+      window.submitRating = async () => {
+        const address = addressInput.value.trim();
+        const rating = document.querySelectorAll('.star.selected').length;
+        const client = document.getElementById('clientName').value.trim();
+        const job = document.getElementById('jobPerformed').value.trim();
+        const notes = document.getElementById('notes').value.trim();
+
+        if (!address || !client || !job || !notes || rating === 0 || notes.length > 100) {
+          alert("All fields are required and description must be under 100 characters.");
+          return;
+        }
+
+        const docRef = doc(db, "ratings", address);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          await setDoc(docRef, {
+            address: address,
+            ratings: [{
+              timestamp: new Date().toISOString(),
+              rating, client, job, notes
+            }]
+          });
+        } else {
+          await updateDoc(docRef, {
+            ratings: arrayUnion({
+              timestamp: new Date().toISOString(),
+              rating, client, job, notes
+            })
+          });
+        }
+        alert("✅ Thank you for rating " + address);
+        ratingForm.reset();
+        document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
+      };
+
+      window.selectStar = (n) => {
+        document.querySelectorAll('.star').forEach((star, idx) => {
+          star.classList.toggle('selected', idx < n);
+        });
+      };
+    });
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #fdfaf0;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background-color: #2f855a;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+    section {
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, textarea {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      background-color: #2f855a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .stars span {
+      font-size: 2rem;
+      color: #ccc;
+      cursor: pointer;
+    }
+    .stars span.selected {
+      color: #f5b301;
+    }
+  </style>
+</head>
+<body>
+  <header><h1>JobSiteRating (Beta)</h1></header>
+
+  <section id="loginSection">
+    <h2>Contractor Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Log In</button>
+    </form>
+  </section>
+
+  <section id="mainApp" style="display:none;">
+    <h2>Submit Rating</h2>
+    <input type="text" id="addressInput" placeholder="Enter address" required />
+    <div class="stars">
+      <span onclick="selectStar(1)">★</span>
+      <span onclick="selectStar(2)">★</span>
+      <span onclick="selectStar(3)">★</span>
+      <span onclick="selectStar(4)">★</span>
+      <span onclick="selectStar(5)">★</span>
+    </div>
+    <form id="ratingForm">
+      <textarea id="clientName" placeholder="Client Name (required)"></textarea>
+      <textarea id="jobPerformed" placeholder="Job Performed (required)"></textarea>
+      <textarea id="notes" placeholder="Short Description (required, max 100 chars)"></textarea>
+      <button type="button" onclick="submitRating()">Submit Rating</button>
+    </form>
+  </section>
+
+  <footer>&copy; 2025 JobSiteRating | Score the job, not the person</footer>
+</body>
+</html>

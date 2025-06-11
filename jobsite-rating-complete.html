@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobSiteRating</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initAutocomplete" async defer></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fdfaf0;
+      color: #333;
+    }
+    header {
+      background-color: #2f855a;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo-text {
+      color: #f1b600;
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      background: white;
+    }
+    .hero h1 {
+      font-size: 2.25rem;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      color: #555;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .branding-note {
+      margin-top: 1.25rem;
+      font-size: 1rem;
+      color: #2f855a;
+      font-weight: 600;
+    }
+    .address-check {
+      padding: 2rem;
+      text-align: center;
+      background-color: #fdfaf0;
+    }
+    input[type="text"], textarea {
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 300px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-bottom: 0.75rem;
+      font-family: 'Inter', sans-serif;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: #2f855a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .stars {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin: 1rem 0;
+    }
+    .star {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #ccc;
+    }
+    .star.selected {
+      color: #f5b301;
+    }
+    .rating-tile {
+      background: #fff;
+      padding: 1rem;
+      margin: 1rem auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      max-width: 500px;
+      text-align: left;
+      position: relative;
+    }
+    .tile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .thank-you {
+      background: #e0f7df;
+      border-left: 4px solid #4caf50;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 4px;
+    }
+    .stats-btn {
+      background: #f1b600;
+      border: none;
+      color: #333;
+      font-weight: bold;
+      padding: 0.25rem 0.75rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .stats-content {
+      display: none;
+      margin-top: 1rem;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="logo-pin-stars.png" alt="JobSiteRating logo" style="height: 28px;" />
+      <span class="logo-text">JobSiteRating</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Every Location Has a History</h1>
+    <p>JobSiteRating helps contractors make smarter decisions by revealing real, anonymous ratings of past experiences at service addresses.</p>
+    <div class="branding-note">We rate jobs, not people. We’re scoring service experiences — not individuals.</div>
+  </section>
+
+  <section class="address-check">
+    <h2 style="color: #f1b600;">🔍 Check a Job Site <span style="font-size: 0.75rem;">BETA</span></h2>
+    <p>Enter an address below to see if any service ratings are available.</p>
+    <input type="text" id="addressInput" placeholder="Enter address to see its rating" />
+    <button onclick="checkRating()">Check Address</button>
+
+    <div id="addressCheckTile"></div>
+
+    <div id="ratingForm" style="display:none;">
+      <h3 style="margin-top: 2rem;">Submit Your Rating</h3>
+      <div class="stars" id="stars">
+        <span class="star" onclick="selectStar(1)">&#9733;</span>
+        <span class="star" onclick="selectStar(2)">&#9733;</span>
+        <span class="star" onclick="selectStar(3)">&#9733;</span>
+        <span class="star" onclick="selectStar(4)">&#9733;</span>
+        <span class="star" onclick="selectStar(5)">&#9733;</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <textarea id="clientName" placeholder="Client Name (required)"></textarea>
+        <textarea id="jobPerformed" placeholder="Job Performed (required)"></textarea>
+        <textarea id="notes" placeholder="Short Description of Problem (required, max 100 chars)"></textarea>
+      </div>
+      <button onclick="submitRating()">Submit Rating</button>
+    </div>
+
+    <div id="ratingTiles"></div>
+  </section>
+
+  <footer>&copy; 2025 JobSiteRating. All rights reserved. | Score the job, not the person.</footer>
+
+  <script>
+    let selectedRating = 0;
+    let ratingTiles = [];
+    let currentAddress = '';
+    let ratedAddresses = new Set();
+
+    function selectStar(rating) {
+      selectedRating = rating;
+      document.querySelectorAll('.star').forEach((star, index) => {
+        star.classList.toggle('selected', index < rating);
+      });
+    }
+
+    function checkRating() {
+      const input = document.getElementById('addressInput');
+      currentAddress = input.value.trim();
+      if (!currentAddress || ratedAddresses.has(currentAddress)) return;
+
+      document.getElementById('ratingForm').style.display = 'block';
+
+      const tile = `<div class="rating-tile">
+        <div class="tile-header">
+          <button class="stats-btn" disabled>📊 Stats</button>
+          <h4>${currentAddress}</h4>
+        </div>
+        <div><strong>No rating yet,</strong> but check out these interesting stats:</div>
+        <ul>
+          <li>📍 Zip code avg: 4.3 ⭐</li>
+          <li>🔧 Common trades: Electrical, Roofing, Painting</li>
+          <li>🧾 Pro Comfort Index: 3.9</li>
+        </ul>
+      </div>`;
+
+      document.getElementById('addressCheckTile').innerHTML = tile;
+    }
+
+    function submitRating() {
+      const notes = document.getElementById('notes');
+      const clientName = document.getElementById('clientName');
+      const jobPerformed = document.getElementById('jobPerformed');
+
+      const notesVal = notes.value.trim();
+      const clientNameVal = clientName.value.trim();
+      const jobPerformedVal = jobPerformed.value.trim();
+
+      if (!clientNameVal || !jobPerformedVal || !notesVal) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      if (notesVal.length > 100) {
+        alert('Description must be under 100 characters.');
+        return;
+      }
+      if (selectedRating === 0) {
+        alert('Please select a star rating.');
+        return;
+      }
+      if (ratedAddresses.has(currentAddress)) {
+        alert('You have already submitted a rating for this address.');
+        return;
+      }
+
+      ratedAddresses.add(currentAddress);
+      document.getElementById('addressCheckTile').innerHTML = '';
+
+      const tile = `<div class="rating-tile">
+        <div class="tile-header">
+          <button class="stats-btn" onclick="toggleStats(this)">📊 Stats</button>
+          <h4>${currentAddress}</h4>
+        </div>
+        <div class="thank-you">
+          <strong>✅ Thank you for rating ${currentAddress}. Your rating was submitted anonymously.</strong>
+          <ul>
+            <li>⭐ Your Rating: ${selectedRating}/5</li>
+            <li>📅 Rated: ${new Date().toLocaleString()}</li>
+          </ul>
+          <p>🔒 Private: Only you can see this rating until another verified contractor submits a rating for this job site.</p>
+        </div>
+        <div class="stats-content">
+          <ul>
+            <li>📍 Zip code avg: 4.3 ⭐</li>
+            <li>🔧 Common trades: Electrical, Roofing, Painting</li>
+            <li>🧾 Pro Comfort Index: 3.9</li>
+            <li>🧑‍💼 Client: ${clientNameVal}</li>
+            <li>🛠 Job performed: ${jobPerformedVal}</li>
+            <li>🧾 Complaint: ${notesVal}</li>
+          </ul>
+        </div>
+      </div>`;
+
+      notes.value = '';
+      clientName.value = '';
+      jobPerformed.value = '';
+      selectedRating = 0;
+      document.querySelectorAll('.star').forEach(star => star.classList.remove('selected'));
+
+      ratingTiles.unshift(tile);
+      renderTiles();
+    }
+
+    function renderTiles() {
+      document.getElementById('ratingTiles').innerHTML = ratingTiles.join('');
+    }
+
+    function toggleStats(button) {
+      const container = button.parentElement.parentElement;
+      const stats = container.querySelector('.stats-content');
+      if (stats) stats.style.display = stats.style.display === 'none' || stats.style.display === '' ? 'block' : 'none';
+    }
+
+    function initAutocomplete() {
+      const input = document.getElementById('addressInput');
+      new google.maps.places.Autocomplete(input);
+    }
+
+    window.onload = initAutocomplete;
+  </script>
+</body>
+</html>

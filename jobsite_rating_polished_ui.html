@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobSiteRating</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background-color: #fffef1;
+    }
+    header {
+      background-color: #2f855a;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+    .logo img {
+      height: 30px;
+    }
+    .hero {
+      padding: 3rem 1rem;
+      text-align: center;
+      background-color: white;
+    }
+    .hero h1 {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto;
+      font-size: 1.125rem;
+      color: #444;
+    }
+    .tagline {
+      color: #2f855a;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    .main {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    input[type="text"] {
+      padding: 0.75rem;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #2f855a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .stars {
+      font-size: 1.75rem;
+      margin: 1rem 0;
+    }
+    .stars span {
+      cursor: pointer;
+      color: #ccc;
+    }
+    .stars span.selected {
+      color: #f5b301;
+    }
+    .tile {
+      background-color: white;
+      border-radius: 6px;
+      margin: 2rem auto;
+      padding: 1rem;
+      max-width: 600px;
+      border: 1px solid #ddd;
+    }
+    .stats-tile {
+      background-color: #fdf6dc;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    .thankyou {
+      background-color: #f0fdf4;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #777;
+      font-size: 0.875rem;
+    }
+    .section-label {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="logo-pin-stars.png" alt="JobSiteRating logo" />
+      JobSiteRating
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Every Location Has a History</h1>
+    <p>JobSiteRating helps contractors make smarter decisions by revealing real, anonymous ratings of past experiences at service addresses.</p>
+    <div class="tagline">We rate jobs, not people. We’re scoring service experiences — not individuals.</div>
+  </section>
+
+  <section class="main">
+    <div class="section-label">🔍 Check a Job Site <span style="font-size: 0.8rem; color: #b45309;">BETA</span></div>
+    <input type="text" id="addressInput" placeholder="Enter address to see its rating" />
+    <button onclick="checkRating()">Check Address</button>
+
+    <div class="tile" id="ratingContainer" style="display:none;"></div>
+
+    <div class="section-label">Submit Your Rating</div>
+    <div class="stars" id="stars">
+      <span onclick="selectStar(1)">&#9733;</span>
+      <span onclick="selectStar(2)">&#9733;</span>
+      <span onclick="selectStar(3)">&#9733;</span>
+      <span onclick="selectStar(4)">&#9733;</span>
+      <span onclick="selectStar(5)">&#9733;</span>
+    </div>
+    <textarea id="notes" rows="3" style="max-width:500px;width:100%;" placeholder="Private notes (optional, max 500 chars)"></textarea><br />
+    <button onclick="submitRating()">Submit Rating</button>
+  </section>
+
+  <footer>
+    &copy; 2025 JobSiteRating. All rights reserved. | Score the job, not the person.
+  </footer>
+
+  <script>
+    let selectedRating = 0;
+    function selectStar(rating) {
+      selectedRating = rating;
+      document.querySelectorAll('.stars span').forEach((s, i) => {
+        s.classList.toggle('selected', i < rating);
+      });
+    }
+
+    function checkRating() {
+      const container = document.getElementById('ratingContainer');
+      container.style.display = 'block';
+      const sampleStats = `
+        <strong>534 Broadway, Saratoga Springs, NY, USA</strong><br />
+        <div class="stats-tile">
+          <strong>No rating yet, but check out these interesting stats:</strong><br />
+          📍 Zip code avg: 4.3 ⭐<br />
+          🛠️ Common trades: Electrical, Roofing, Painting<br />
+          🧾 Pro Comfort Index: 3.9
+        </div>
+      `;
+      container.innerHTML = sampleStats;
+    }
+
+    function submitRating() {
+      const container = document.getElementById('ratingContainer');
+      const now = new Date().toLocaleString();
+      const thankYou = `
+        <div class="thankyou">
+          ✅ <strong>Thank you! Your rating was submitted anonymously.</strong><br /><br />
+          🌟 Your Rating: ${selectedRating}/5<br />
+          🕒 Rated: ${now}<br />
+          📍 Zip code avg: 4.3 ⭐<br />
+          🛠️ Common trades: Electrical, Roofing, Painting<br />
+          🧾 Pro Comfort Index: 3.9<br /><br />
+          🔒 <em>Private: Only you can see this rating until another verified contractor submits a rating for this job site.</em>
+        </div>
+      `;
+      container.innerHTML = thankYou;
+    }
+  </script>
+</body>
+</html>
